@@ -4,6 +4,7 @@ import { FruitCard } from '../components/fruits/FruitCard';
 import { FruitDetailModal } from '../components/fruits/FruitDetailModal';
 import { Search, SlidersHorizontal, Sparkles, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
+import { fallbackCategories, fallbackProducts } from '../data/mockData';
 
 interface FruitCatalogProps {
   onNavigate: (path: string) => void;
@@ -24,11 +25,23 @@ export const FruitCatalog: React.FC<FruitCatalogProps> = ({ onNavigate }) => {
   // Fetch Categories
   useEffect(() => {
     fetch('/api/categories')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.data) setCategories(data.data);
+      .then((res) => {
+        const contentType = res.headers.get('content-type');
+        if (res.ok && contentType && contentType.includes('application/json')) {
+          return res.json();
+        }
+        throw new Error('Not JSON');
       })
-      .catch((err) => console.error('Failed to fetch categories', err));
+      .then((data) => {
+        if (data.data && data.data.length > 0) {
+          setCategories(data.data);
+        } else {
+          setCategories(fallbackCategories);
+        }
+      })
+      .catch(() => {
+        setCategories(fallbackCategories);
+      });
   }, []);
 
   // Fetch Products
@@ -49,14 +62,37 @@ export const FruitCatalog: React.FC<FruitCatalogProps> = ({ onNavigate }) => {
       }
 
       const res = await fetch(`/api/products?${params.toString()}`);
-      const json = await res.json();
-      if (json.data) {
-        setProducts(json.data);
-        setTotalPages(json.totalPages || 1);
-        setTotalItems(json.total || 0);
+      const contentType = res.headers.get('content-type');
+      if (res.ok && contentType && contentType.includes('application/json')) {
+        const json = await res.json();
+        if (json.data) {
+          setProducts(json.data);
+          setTotalPages(json.totalPages || 1);
+          setTotalItems(json.total || 0);
+          return;
+        }
       }
+
+      // Fallback for static hosting
+      let filtered = [...fallbackProducts];
+      if (selectedCategory !== 'all') {
+        filtered = filtered.filter((p) => p.categoryId === selectedCategory);
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        filtered = filtered.filter((p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
+      }
+      setProducts(filtered);
+      setTotalPages(1);
+      setTotalItems(filtered.length);
     } catch (err) {
-      console.error('Error fetching products', err);
+      let filtered = [...fallbackProducts];
+      if (selectedCategory !== 'all') {
+        filtered = filtered.filter((p) => p.categoryId === selectedCategory);
+      }
+      setProducts(filtered);
+      setTotalPages(1);
+      setTotalItems(filtered.length);
     } finally {
       setIsLoading(false);
     }
