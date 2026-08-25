@@ -120,16 +120,16 @@ export const FruitCatalog: React.FC<FruitCatalogProps> = ({ onNavigate }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         {/* Filter and Category Pills */}
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
             {/* Category Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
+            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1.5 sm:pb-0 max-w-full no-scrollbar">
               <button
                 type="button"
                 onClick={() => {
                   setSelectedCategory('all');
                   setPage(1);
                 }}
-                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                   selectedCategory === 'all'
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -146,7 +146,7 @@ export const FruitCatalog: React.FC<FruitCatalogProps> = ({ onNavigate }) => {
                     setSelectedCategory(cat.id);
                     setPage(1);
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                     selectedCategory === cat.id
                       ? 'bg-emerald-600 text-white shadow-xs'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -161,9 +161,11 @@ export const FruitCatalog: React.FC<FruitCatalogProps> = ({ onNavigate }) => {
             </div>
 
             {/* Sorting Dropdown */}
-            <div className="flex items-center gap-2 text-xs text-slate-500 shrink-0">
-              <SlidersHorizontal className="w-4 h-4 text-slate-400" />
-              <span className="hidden sm:inline">เรียงตาม:</span>
+            <div className="flex items-center justify-between sm:justify-start gap-2 text-xs text-slate-500 shrink-0">
+              <div className="flex items-center gap-1.5">
+                <SlidersHorizontal className="w-4 h-4 text-slate-400" />
+                <span className="inline">เรียงตาม:</span>
+              </div>
               <select
                 value={sortBy}
                 onChange={(e) => {

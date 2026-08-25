@@ -155,7 +155,7 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate }) 
         </form>
       </div>
 
-      {/* Orders Table */}
+      {/* Orders Table & Mobile Cards */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xs">
         {isLoading ? (
           <div className="py-16 text-center text-xs text-slate-400">กำลังโหลดคำสั่งซื้อ...</div>
@@ -166,24 +166,14 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate }) 
             <p className="text-xs text-slate-400 mt-1">ไม่มีคำสั่งซื้อในสถานะที่เลือก</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-slate-400 font-bold uppercase tracking-wider">
-                  <th className="py-3.5 px-4">รหัสคำสั่งซื้อ & วันที่</th>
-                  <th className="py-3.5 px-4">ลูกค้า & เบอร์โทร</th>
-                  <th className="py-3.5 px-4">รายการผลไม้</th>
-                  <th className="py-3.5 px-4">ยอดรวมสุทธิ</th>
-                  <th className="py-3.5 px-4">สถานะปัจจุบัน</th>
-                  <th className="py-3.5 px-4">เปลี่ยนสถานะ</th>
-                  <th className="py-3.5 px-4 text-right">รายละเอียด</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="py-3.5 px-4">
-                      <span className="font-mono font-black text-slate-900 dark:text-white block text-sm">
+          <>
+            {/* Mobile Card List (Screen < md) */}
+            <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+              {orders.map((order) => (
+                <div key={order.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span className="font-mono font-black text-slate-900 dark:text-white text-sm block">
                         {order.orderNumber}
                       </span>
                       <span className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
@@ -196,41 +186,50 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate }) 
                           นัดรับ: {new Date(order.pickupDate).toLocaleDateString('th-TH')}
                         </span>
                       )}
-                    </td>
+                    </div>
+                    <OrderStatusBadge status={order.status} size="sm" />
+                  </div>
 
-                    <td className="py-3.5 px-4">
-                      <span className="font-bold text-slate-900 dark:text-white block">
+                  <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 space-y-1.5 text-xs">
+                    <div className="flex justify-between items-center text-slate-700 dark:text-slate-300 font-medium">
+                      <span>ลูกค้า:</span>
+                      <span className="font-bold text-slate-900 dark:text-white">
                         {order.user ? `${order.user.firstName} ${order.user.lastName}` : 'ลูกค้าทั่วไป'}
                       </span>
-                      <span className="text-slate-400 text-[11px]">{order.user?.phone || '-'}</span>
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <div className="space-y-1">
+                    </div>
+                    {order.user?.phone && (
+                      <div className="flex justify-between items-center text-slate-500">
+                        <span>เบอร์โทร:</span>
+                        <span>{order.user.phone}</span>
+                      </div>
+                    )}
+                    <div className="pt-1 border-t border-slate-200/60 dark:border-slate-700">
+                      <div className="text-[11px] text-slate-500 mb-1 font-semibold">รายการผลไม้:</div>
+                      <div className="space-y-0.5 pl-1">
                         {order.items?.map((item, idx) => (
-                          <div key={idx} className="text-slate-600 dark:text-slate-300">
+                          <div key={idx} className="text-slate-600 dark:text-slate-300 text-[11px]">
                             • {item.productName} ({item.quantity} {item.unit})
                           </div>
                         ))}
                       </div>
-                    </td>
+                    </div>
+                    <div className="flex justify-between items-center pt-2 border-t border-slate-200/60 dark:border-slate-700">
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">ยอดรวมสุทธิ:</span>
+                      <span className="font-black text-sm text-emerald-600 dark:text-emerald-400">
+                        ฿{order.total.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
 
-                    <td className="py-3.5 px-4 font-black text-sm text-emerald-600 dark:text-emerald-400">
-                      ฿{order.total.toLocaleString()}
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <OrderStatusBadge status={order.status} size="sm" />
-                    </td>
-
-                    <td className="py-3.5 px-4">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-2">
+                    <div className="flex-1">
                       {updatingId === order.id ? (
                         <span className="text-xs text-slate-400 animate-pulse">กำลังบันทึก...</span>
                       ) : (
                         <select
                           value={order.status}
                           onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
-                          className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500"
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500"
                         >
                           <option value="PENDING">1. รอดำเนินการ (PENDING)</option>
                           <option value="CONFIRMED">2. ยืนยันออเดอร์ (CONFIRMED)</option>
@@ -240,22 +239,112 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate }) 
                           <option value="CANCELLED">6. ยกเลิก (CANCELLED)</option>
                         </select>
                       )}
-                    </td>
+                    </div>
 
-                    <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={() => onNavigate(`/my-orders/${order.id}`)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white text-slate-700 dark:text-slate-200 text-xs font-bold inline-flex items-center gap-1 transition-colors"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>ดูข้อมูล</span>
-                      </button>
-                    </td>
+                    <button
+                      onClick={() => onNavigate(`/my-orders/${order.id}`)}
+                      className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white text-slate-700 dark:text-slate-200 text-xs font-bold inline-flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>ดูข้อมูลคำสั่งซื้อ</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View (Screen >= md) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-slate-400 font-bold uppercase tracking-wider">
+                    <th className="py-3.5 px-4">รหัสคำสั่งซื้อ & วันที่</th>
+                    <th className="py-3.5 px-4">ลูกค้า & เบอร์โทร</th>
+                    <th className="py-3.5 px-4">รายการผลไม้</th>
+                    <th className="py-3.5 px-4">ยอดรวมสุทธิ</th>
+                    <th className="py-3.5 px-4">สถานะปัจจุบัน</th>
+                    <th className="py-3.5 px-4">เปลี่ยนสถานะ</th>
+                    <th className="py-3.5 px-4 text-right">รายละเอียด</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                  {orders.map((order) => (
+                    <tr key={order.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="py-3.5 px-4">
+                        <span className="font-mono font-black text-slate-900 dark:text-white block text-sm">
+                          {order.orderNumber}
+                        </span>
+                        <span className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                          <Clock className="w-3 h-3" />
+                          {new Date(order.createdAt).toLocaleString('th-TH')}
+                        </span>
+                        {order.pickupDate && (
+                          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
+                            <Calendar className="w-3 h-3" />
+                            นัดรับ: {new Date(order.pickupDate).toLocaleDateString('th-TH')}
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <span className="font-bold text-slate-900 dark:text-white block">
+                          {order.user ? `${order.user.firstName} ${order.user.lastName}` : 'ลูกค้าทั่วไป'}
+                        </span>
+                        <span className="text-slate-400 text-[11px]">{order.user?.phone || '-'}</span>
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <div className="space-y-1">
+                          {order.items?.map((item, idx) => (
+                            <div key={idx} className="text-slate-600 dark:text-slate-300">
+                              • {item.productName} ({item.quantity} {item.unit})
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-4 font-black text-sm text-emerald-600 dark:text-emerald-400">
+                        ฿{order.total.toLocaleString()}
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <OrderStatusBadge status={order.status} size="sm" />
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        {updatingId === order.id ? (
+                          <span className="text-xs text-slate-400 animate-pulse">กำลังบันทึก...</span>
+                        ) : (
+                          <select
+                            value={order.status}
+                            onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
+                            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500"
+                          >
+                            <option value="PENDING">1. รอดำเนินการ (PENDING)</option>
+                            <option value="CONFIRMED">2. ยืนยันออเดอร์ (CONFIRMED)</option>
+                            <option value="PREPARING">3. กำลังจัดเตรียม (PREPARING)</option>
+                            <option value="READY">4. พร้อมรับสินค้า (READY)</option>
+                            <option value="COMPLETED">5. สำเร็จ (COMPLETED)</option>
+                            <option value="CANCELLED">6. ยกเลิก (CANCELLED)</option>
+                          </select>
+                        )}
+                      </td>
+
+                      <td className="py-3.5 px-4 text-right">
+                        <button
+                          onClick={() => onNavigate(`/my-orders/${order.id}`)}
+                          className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white text-slate-700 dark:text-slate-200 text-xs font-bold inline-flex items-center gap-1 transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>ดูข้อมูล</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

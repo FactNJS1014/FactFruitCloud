@@ -207,7 +207,46 @@ export const InventoryManagement: React.FC = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Mobile Inventory Cards (Screen < md) */}
+        <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+          {filteredProducts.map((p) => (
+            <div key={p.id} className="p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <img
+                  src={p.image || 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=80&auto=format&fit=crop&q=80'}
+                  alt={p.name}
+                  referrerPolicy="no-referrer"
+                  className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <span className="font-mono text-[10px] text-slate-400 block uppercase">{p.code}</span>
+                  <h4 className="font-bold text-slate-900 dark:text-white text-sm truncate">{p.name}</h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-slate-500">คงเหลือ:</span>
+                    <span className="font-black text-sm text-slate-900 dark:text-white">
+                      {p.stock} {p.unit}
+                    </span>
+                    <span className="text-[10px] text-slate-400">(ขั้นต่ำ: {p.minimumStock})</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                <StockBadge stock={p.stock} minimumStock={p.minimumStock} unit={p.unit} />
+                <button
+                  onClick={() => handleOpenRestock(p)}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs inline-flex items-center gap-1.5 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>ปรับสต็อก</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Table (Screen >= md) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-slate-400 font-bold uppercase tracking-wider">

@@ -277,7 +277,7 @@ export const ProductManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Products Table */}
+      {/* Products Table & Mobile Cards */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xs">
         {isLoading ? (
           <div className="py-16 text-center text-xs text-slate-400">กำลังโหลดรายการสินค้า...</div>
@@ -288,96 +288,168 @@ export const ProductManagement: React.FC = () => {
             <p className="text-xs text-slate-400 mt-1">คลิกปุ่ม "+ เพิ่มผลไม้ใหม่" เพื่อเริ่มสร้างรายการสินค้า</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-slate-400 font-bold uppercase tracking-wider">
-                  <th className="py-3.5 px-4">รูปภาพ & ข้อมูลสินค้า</th>
-                  <th className="py-3.5 px-4">หมวดหมู่</th>
-                  <th className="py-3.5 px-4">ราคา / หน่วย</th>
-                  <th className="py-3.5 px-4">สต็อกคงเหลือ</th>
-                  <th className="py-3.5 px-4">สถานะจำหน่าย</th>
-                  <th className="py-3.5 px-4 text-right">การกระทำ</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={p.image || 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=80&auto=format&fit=crop&q=80'}
-                          alt={p.name}
-                          referrerPolicy="no-referrer"
-                          className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
-                        />
-                        <div>
-                          <span className="text-[10px] font-mono font-bold text-slate-400 block uppercase">
-                            {p.code}
-                          </span>
-                          <span className="font-bold text-slate-900 dark:text-white text-sm">
-                            {p.name}
-                          </span>
-                        </div>
+          <>
+            {/* Mobile Card List (Screen < md) */}
+            <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+              {products.map((p) => (
+                <div key={p.id} className="p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={p.image || 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=120&auto=format&fit=crop&q=80'}
+                      alt={p.name}
+                      referrerPolicy="no-referrer"
+                      className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">
+                          {p.code}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                          {p.category?.name || '-'}
+                        </span>
                       </div>
-                    </td>
-
-                    <td className="py-3 px-4 text-slate-600 dark:text-slate-300">
-                      <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold">
-                        {p.category?.name || '-'}
-                      </span>
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <span className="font-extrabold text-sm text-emerald-600 dark:text-emerald-400">
-                        ฿{p.price.toLocaleString()}
-                      </span>
-                      <span className="text-slate-400 text-xs"> / {p.unit}</span>
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <StockBadge stock={p.stock} minimumStock={p.minimumStock} unit={p.unit} />
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <button
-                        onClick={() => handleToggleAvailable(p)}
-                        className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${
-                          p.isAvailable
-                            ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'
-                        }`}
-                      >
-                        {p.isAvailable ? 'เปิดจำหน่าย' : 'ปิดจำหน่าย'}
-                      </button>
-                    </td>
-
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => handleOpenEdit(p)}
-                          className="p-2 rounded-lg text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 dark:text-slate-300 transition-colors"
-                          title="แก้ไขสินค้า"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setDeletingProduct(p);
-                            setIsDeleteOpen(true);
-                          }}
-                          className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-colors"
-                          title="ลบสินค้า"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                      <h4 className="font-bold text-slate-900 dark:text-white text-sm truncate mt-0.5">
+                        {p.name}
+                      </h4>
+                      <div className="mt-1 flex items-baseline gap-1">
+                        <span className="font-extrabold text-sm text-emerald-600 dark:text-emerald-400">
+                          ฿{p.price.toLocaleString()}
+                        </span>
+                        <span className="text-slate-400 text-xs"> / {p.unit}</span>
                       </div>
-                    </td>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                    <StockBadge stock={p.stock} minimumStock={p.minimumStock} unit={p.unit} />
+                    <button
+                      onClick={() => handleToggleAvailable(p)}
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${
+                        p.isAvailable
+                          ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      {p.isAvailable ? 'เปิดจำหน่าย' : 'ปิดจำหน่าย'}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <button
+                      onClick={() => handleOpenEdit(p)}
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-emerald-600 hover:text-white text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>แก้ไข</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDeletingProduct(p);
+                        setIsDeleteOpen(true);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>ลบ</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View (Screen >= md) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-slate-400 font-bold uppercase tracking-wider">
+                    <th className="py-3.5 px-4">รูปภาพ & ข้อมูลสินค้า</th>
+                    <th className="py-3.5 px-4">หมวดหมู่</th>
+                    <th className="py-3.5 px-4">ราคา / หน่วย</th>
+                    <th className="py-3.5 px-4">สต็อกคงเหลือ</th>
+                    <th className="py-3.5 px-4">สถานะจำหน่าย</th>
+                    <th className="py-3.5 px-4 text-right">การกระทำ</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                  {products.map((p) => (
+                    <tr key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={p.image || 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=80&auto=format&fit=crop&q=80'}
+                            alt={p.name}
+                            referrerPolicy="no-referrer"
+                            className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
+                          />
+                          <div>
+                            <span className="text-[10px] font-mono font-bold text-slate-400 block uppercase">
+                              {p.code}
+                            </span>
+                            <span className="font-bold text-slate-900 dark:text-white text-sm">
+                              {p.name}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-4 text-slate-600 dark:text-slate-300">
+                        <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold">
+                          {p.category?.name || '-'}
+                        </span>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <span className="font-extrabold text-sm text-emerald-600 dark:text-emerald-400">
+                          ฿{p.price.toLocaleString()}
+                        </span>
+                        <span className="text-slate-400 text-xs"> / {p.unit}</span>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <StockBadge stock={p.stock} minimumStock={p.minimumStock} unit={p.unit} />
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => handleToggleAvailable(p)}
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${
+                            p.isAvailable
+                              ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          {p.isAvailable ? 'เปิดจำหน่าย' : 'ปิดจำหน่าย'}
+                        </button>
+                      </td>
+
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleOpenEdit(p)}
+                            className="p-2 rounded-lg text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 dark:text-slate-300 transition-colors"
+                            title="แก้ไขสินค้า"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setDeletingProduct(p);
+                              setIsDeleteOpen(true);
+                            }}
+                            className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-colors"
+                            title="ลบสินค้า"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

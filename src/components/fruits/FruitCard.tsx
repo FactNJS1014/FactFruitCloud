@@ -118,11 +118,11 @@ export const FruitCard: React.FC<FruitCardProps> = ({ product, onOpenDetail }) =
         </div>
 
         {/* Actions */}
-        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           {/* Quantity Stepper */}
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`flex items-center border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 p-0.5 ${
+            className={`flex items-center justify-between sm:justify-center border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 p-0.5 ${
               isSoldOut ? 'opacity-40 pointer-events-none' : ''
             }`}
           >
@@ -163,7 +163,7 @@ export const FruitCard: React.FC<FruitCardProps> = ({ product, onOpenDetail }) =
             }`}
           >
             <ShoppingCart className="w-3.5 h-3.5" />
-            <span>เพิ่มลงตะกร้า</span>
+            <span className="whitespace-nowrap">เพิ่มลงตะกร้า</span>
           </button>
         </div>
       </div>
