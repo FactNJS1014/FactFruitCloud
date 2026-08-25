@@ -1,0 +1,167 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id            String         @id @default(uuid())
+  firstName     String
+  lastName      String
+  email         String         @unique
+  password      String
+  phone         String
+  role          Role           @default(USER)
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  orders        Order[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+
+  @@index([email])
+}
+
+model FruitCategory {
+  id          String         @id @default(uuid())
+  name        String
+  description String?
+  image       String?
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  products    FruitProduct[]
+}
+
+model FruitProduct {
+  id           String         @id @default(uuid())
+  code         String         @unique
+  name         String
+  description  String?
+  categoryId   String
+  category     FruitCategory  @relation(fields: [categoryId], references: [id])
+  image        String?
+  unit         String         // กิโลกรัม, กรัม, ลูก, กล่อง, ถุง, แพ็ค
+  price        Decimal        @db.Decimal(10, 2)
+  stock        Decimal        @default(0) @db.Decimal(10, 2)
+  minimumStock Decimal        @default(5) @db.Decimal(10, 2)
+  isAvailable  Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  orderItems   OrderItem[]
+
+  @@index([code])
+  @@index([name])
+  @@index([categoryId])
+  @@index([isAvailable])
+}
+
+model Order {
+  id             String               @id @default(uuid())
+  orderNumber    String               @unique
+  userId         String
+  user           User                 @relation(fields: [userId], references: [id])
+  status         OrderStatus          @default(PENDING)
+  subtotal       Decimal              @db.Decimal(10, 2)
+  discount       Decimal              @default(0) @db.Decimal(10, 2)
+  total          Decimal              @db.Decimal(10, 2)
+  note           String?
+  pickupDate     DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  items          OrderItem[]
+  statusHistory  OrderStatusHistory[]
+
+  @@index([orderNumber])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id          String       @id @default(uuid())
+  orderId     String
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     FruitProduct @relation(fields: [productId], references: [id])
+  productName String
+  unitPrice   Decimal      @db.Decimal(10, 2)
+  quantity    Decimal      @db.Decimal(10, 2)
+  unit        String
+  subtotal    Decimal      @db.Decimal(10, 2)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model OrderStatusHistory {
+  id          String      @id @default(uuid())
+  orderId     String
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status      OrderStatus
+  note        String?
+  changedById String?
+  createdAt   DateTime    @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action      String   // User Login, Create Product, Cancel Order, etc.
+  entity      String   // Product, Order, User, Category, Setting
+  entityId    String?
+  description String
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model StoreSetting {
+  id          String   @id @default(uuid())
+  storeName   String   @default("FactFruit")
+  logo        String?
+  address     String?
+  phone       String?
+  email       String?
+  currency    String   @default("THB")
+  orderPrefix String   @default("ORD-")
+  timezone    String   @default("Asia/Bangkok")
+  updatedAt   DateTime @updatedAt
+}

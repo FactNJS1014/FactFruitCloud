@@ -1,0 +1,6 @@
+{
+  "name": "FactFruit",
+  "description": "ระบบจัดการขายและสั่งจองผลไม้ (Fruit Ordering Management System) รองรับการจัดการสินค้า ออเดอร์ สต็อก และรายงานสำหรับ Admin และ User",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
