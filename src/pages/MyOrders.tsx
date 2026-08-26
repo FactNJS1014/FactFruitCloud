@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { Order, OrderStatus } from '../types';
 import { OrderStatusBadge } from '../components/common/OrderStatusBadge';
 import { Search, ShoppingBag, Eye, Calendar, Clock, ArrowRight } from 'lucide-react';
@@ -17,23 +18,14 @@ export const MyOrders: React.FC<MyOrdersProps> = ({ onNavigate }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const fetchOrders = async () => {
-    if (!token) return;
     try {
       setIsLoading(true);
-      const params = new URLSearchParams();
-      if (activeStatus !== 'ALL') {
-        params.append('status', activeStatus);
-      }
-      if (search.trim()) {
-        params.append('search', search.trim());
-      }
-
-      const res = await fetch(`/api/orders?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const data = await api.getOrders(token, {
+        status: activeStatus,
+        search: search.trim(),
       });
-      const json = await res.json();
-      if (json.data) {
-        setOrders(json.data);
+      if (data) {
+        setOrders(data);
       }
     } catch (err) {
       console.error('Error fetching orders:', err);

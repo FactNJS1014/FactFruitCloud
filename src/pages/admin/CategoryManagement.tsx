@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { api } from '../../services/api';
 import { FruitCategory } from '../../types';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { ImageUploadInput } from '../../components/common/ImageUploadInput';
@@ -28,9 +29,8 @@ export const CategoryManagement: React.FC = () => {
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/categories');
-      const json = await res.json();
-      if (json.data) setCategories(json.data);
+      const data = await api.getCategories();
+      if (data) setCategories(data);
     } catch (e) {
       console.error(e);
     } finally {
@@ -67,49 +67,28 @@ export const CategoryManagement: React.FC = () => {
 
     try {
       setIsSaving(true);
-      const url = editingCategory ? `/api/categories/${editingCategory.id}` : '/api/categories';
-      const method = editingCategory ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        error(json.error || 'เกิดข้อผิดพลาดในการบันทึกหมวดหมู่');
-        return;
+      if (editingCategory) {
+        await api.updateCategory(token, editingCategory.id, formData);
+        success('อัปเดตหมวดหมู่เรียบร้อยแล้ว');
+      } else {
+        await api.createCategory(token, formData);
+        success('เพิ่มหมวดหมู่ผลไม้ใหม่แล้ว');
       }
 
-      success(editingCategory ? 'อัปเดตหมวดหมู่เรียบร้อยแล้ว' : 'เพิ่มหมวดหมู่ผลไม้ใหม่แล้ว');
       setIsModalOpen(false);
       fetchCategories();
     } catch (err) {
-      error('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+      error('เกิดข้อผิดพลาดในการบันทึกหมวดหมู่');
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!deletingCategory || !token) return;
+    if (!deletingCategory) return;
     try {
       setIsSaving(true);
-      const res = await fetch(`/api/categories/${deletingCategory.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        error(json.error || 'ไม่สามารถลบหมวดหมู่ได้');
-        return;
-      }
-
+      await api.deleteCategory(token, deletingCategory.id);
       success(`ลบหมวดหมู่ "${deletingCategory.name}" เรียบร้อยแล้ว`);
       setIsDeleteOpen(false);
       fetchCategories();

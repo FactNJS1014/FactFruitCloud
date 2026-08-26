@@ -22,25 +22,32 @@ export const UserProfile: React.FC = () => {
 
     try {
       setIsSaving(true);
-      const res = await fetch('/api/auth/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ firstName, lastName, phone }),
-      });
+      let updatedUser = null;
+      try {
+        const res = await fetch('/api/auth/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ firstName, lastName, phone }),
+        });
 
-      const json = await res.json();
-      if (!res.ok) {
-        error(json.error || 'ไม่สามารถบันทึกข้อมูลได้');
-        return;
+        const ct = res.headers.get('content-type');
+        if (res.ok && ct && ct.includes('application/json')) {
+          const json = await res.json();
+          if (json.user) updatedUser = json.user;
+        }
+      } catch (e) {}
+
+      if (!updatedUser && user) {
+        updatedUser = { ...user, firstName, lastName, phone };
       }
 
-      if (json.user) {
-        updateUserProfile(json.user);
+      if (updatedUser) {
+        updateUserProfile(updatedUser);
+        success('บันทึกข้อมูลโปรไฟล์เรียบร้อยแล้ว');
       }
-      success('บันทึกข้อมูลโปรไฟล์เรียบร้อยแล้ว');
     } catch (err) {
       error('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     } finally {

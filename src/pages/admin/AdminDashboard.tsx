@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { api } from '../../services/api';
 import { OrderStatusBadge } from '../../components/common/OrderStatusBadge';
 import { StockBadge } from '../../components/common/StockBadge';
 import {
@@ -40,23 +41,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (!token) return;
-
+    let isMounted = true;
     setIsLoading(true);
     Promise.all([
-      fetch('/api/reports/dashboard', { headers: { Authorization: `Bearer ${token}` } }).then((r) =>
-        r.json()
-      ),
-      fetch('/api/reports/sales?period=monthly', {
-        headers: { Authorization: `Bearer ${token}` },
-      }).then((r) => r.json()),
+      api.getDashboardStats(token),
+      api.getSalesReport(token, 'monthly'),
     ])
       .then(([dashData, salesData]) => {
-        if (dashData.data) setStats(dashData.data);
-        if (salesData.data) setSalesReport(salesData.data);
+        if (isMounted) {
+          if (dashData) setStats(dashData);
+          if (salesData) setSalesReport(salesData);
+        }
       })
       .catch((err) => console.error('Error loading dashboard stats:', err))
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [token]);
 
   const COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#6366f1'];

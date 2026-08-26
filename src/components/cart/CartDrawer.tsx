@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { api } from '../../services/api';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, Calendar, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
@@ -13,7 +14,7 @@ interface CartDrawerProps {
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({ onOrderSuccess, onNavigateToLogin }) => {
   const { items, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart, clearCart, subtotal } = useCart();
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated, token, user } = useAuth();
   const { error, success } = useToast();
 
   const [note, setNote] = useState('');
@@ -44,26 +45,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onOrderSuccess, onNaviga
         pickupDate: pickupDate || undefined,
       };
 
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        error(data.error || 'เกิดข้อผิดพลาดในการสร้างคำสั่งซื้อ');
-        setIsSubmitting(false);
-        return;
-      }
+      const order = await api.createOrder(token, payload, user);
 
       // Success! Clear cart & trigger celebratory confetti
       clearCart();
       setIsCartOpen(false);
-      success(`สั่งจองสำเร็จ! หมายเลขคำสั่งซื้อ ${data.order.orderNumber}`);
+      success(`สั่งจองสำเร็จ! หมายเลขคำสั่งซื้อ ${order.orderNumber}`);
 
       try {
         confetti({
@@ -76,10 +63,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onOrderSuccess, onNaviga
       }
 
       if (onOrderSuccess) {
-        onOrderSuccess(data.order.id, data.order.orderNumber, data.order.total);
+        onOrderSuccess(order.id, order.orderNumber, order.total);
       }
     } catch (err) {
-      error('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+      error('เกิดข้อผิดพลาดในการสร้างคำสั่งซื้อ');
     } finally {
       setIsSubmitting(false);
     }

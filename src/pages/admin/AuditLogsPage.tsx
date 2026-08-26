@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { api } from '../../services/api';
 import { History, Search, Shield, User, Clock, Filter } from 'lucide-react';
 
 export const AuditLogsPage: React.FC = () => {
@@ -10,17 +11,10 @@ export const AuditLogsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const fetchLogs = async () => {
-    if (!token) return;
     try {
       setIsLoading(true);
-      const params = new URLSearchParams({ limit: '100' });
-      if (actionFilter !== 'ALL') params.append('action', actionFilter);
-
-      const res = await fetch(`/api/audit-logs?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const json = await res.json();
-      if (json.data) setLogs(json.data);
+      const data = await api.getAuditLogs(token, actionFilter);
+      if (data) setLogs(data);
     } catch (e) {
       console.error('Error fetching audit logs:', e);
     } finally {

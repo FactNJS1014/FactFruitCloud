@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { api } from '../services/api';
 import { Order } from '../types';
 import { OrderStatusBadge } from '../components/common/OrderStatusBadge';
 import { OrderTimeline } from '../components/common/OrderTimeline';
@@ -33,17 +34,14 @@ export const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ orderId, onNav
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
 
   const fetchOrder = async () => {
-    if (!token || !orderId) return;
+    if (!orderId) return;
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/orders/${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const json = await res.json();
-      if (res.ok && json.data) {
-        setOrder(json.data);
+      const data = await api.getOrderById(token, orderId);
+      if (data) {
+        setOrder(data);
       } else {
-        error(json.error || 'ไม่พบข้อมูลคำสั่งซื้อ');
+        error('ไม่พบข้อมูลคำสั่งซื้อ');
       }
     } catch (err) {
       console.error('Error fetching order details:', err);
@@ -57,23 +55,10 @@ export const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ orderId, onNav
   }, [orderId, token]);
 
   const handleCancelOrder = async () => {
-    if (!token || !order) return;
+    if (!order) return;
     try {
       setIsCancelling(true);
-      const res = await fetch(`/api/orders/${order.id}/cancel`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ note: 'ลูกค้ายกเลิกคำสั่งซื้อผ่านระบบ' }),
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        error(json.error || 'ไม่สามารถยกเลิกคำสั่งซื้อได้');
-        return;
-      }
+      await api.cancelOrder(token, order.id, 'ลูกค้ายกเลิกคำสั่งซื้อผ่านระบบ');
 
       success('ยกเลิกคำสั่งซื้อและคืนสต็อกเรียบร้อยแล้ว');
       setIsCancelModalOpen(false);

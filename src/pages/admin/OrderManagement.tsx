@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { api } from '../../services/api';
 import { Order, OrderStatus } from '../../types';
 import { OrderStatusBadge } from '../../components/common/OrderStatusBadge';
 import {
@@ -33,18 +34,13 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate }) 
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const fetchOrders = async () => {
-    if (!token) return;
     try {
       setIsLoading(true);
-      const params = new URLSearchParams({ limit: '50' });
-      if (activeStatus !== 'ALL') params.append('status', activeStatus);
-      if (search.trim()) params.append('search', search.trim());
-
-      const res = await fetch(`/api/orders?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const data = await api.getOrders(token, {
+        status: activeStatus,
+        search: search.trim(),
       });
-      const json = await res.json();
-      if (json.data) setOrders(json.data);
+      if (data) setOrders(data);
     } catch (err) {
       console.error('Error fetching admin orders:', err);
     } finally {
@@ -64,23 +60,12 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({ onNavigate }) 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     try {
       setUpdatingId(orderId);
-      const res = await fetch(`/api/orders/${orderId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          status: newStatus,
-          note: `ปรับสถานะเป็น ${newStatus} โดยผู้ดูแลระบบ`,
-        }),
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        error(json.error || 'ไม่สามารถปรับสถานะคำสั่งซื้อได้');
-        return;
-      }
+      await api.updateOrderStatus(
+        token,
+        orderId,
+        newStatus,
+        `ปรับสถานะเป็น ${newStatus} โดยผู้ดูแลระบบ`
+      );
 
       success(`อัปเดตสถานะคำสั่งซื้อเป็น "${newStatus}" เรียบร้อยแล้ว`);
       fetchOrders();

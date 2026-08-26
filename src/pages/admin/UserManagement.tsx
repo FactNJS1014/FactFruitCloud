@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { api } from '../../services/api';
 import { User, Role } from '../../types';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { Users, Shield, UserCheck, Search, Check, Lock, Ban } from 'lucide-react';
@@ -19,14 +20,10 @@ export const UserManagement: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   const fetchUsers = async () => {
-    if (!token) return;
     try {
       setIsLoading(true);
-      const res = await fetch('/api/users', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const json = await res.json();
-      if (json.data) setUsers(json.data);
+      const data = await api.getUsers(token);
+      if (data) setUsers(data);
     } catch (err) {
       console.error('Error fetching users:', err);
     } finally {
@@ -39,62 +36,36 @@ export const UserManagement: React.FC = () => {
   }, [token]);
 
   const handleToggleRole = async () => {
-    if (!selectedUser || !token) return;
+    if (!selectedUser) return;
     const newRole: Role = selectedUser.role === 'ADMIN' ? 'USER' : 'ADMIN';
 
     try {
       setIsProcessing(true);
-      const res = await fetch(`/api/users/${selectedUser.id}/role`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ role: newRole }),
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        error(json.error || 'ไม่สามารถเปลี่ยนสิทธิ์ผู้ใช้ได้');
-        return;
-      }
+      await api.updateUserRole(token, selectedUser.id, newRole);
 
       success(`เปลี่ยนสิทธิ์ "${selectedUser.firstName}" เป็น ${newRole} สำเร็จ`);
       setDialogAction(null);
       fetchUsers();
     } catch (e) {
-      error('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+      error('เกิดข้อผิดพลาดในการเปลี่ยนสิทธิ์');
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handleToggleStatus = async () => {
-    if (!selectedUser || !token) return;
+    if (!selectedUser) return;
     const newStatus = selectedUser.isActive !== false ? false : true;
 
     try {
       setIsProcessing(true);
-      const res = await fetch(`/api/users/${selectedUser.id}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ isActive: newStatus }),
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        error(json.error || 'ไม่สามารถเปลี่ยนสถานะบัญชีได้');
-        return;
-      }
+      await api.updateUserStatus(token, selectedUser.id, newStatus);
 
       success(`เปลี่ยนสถานะบัญชี "${selectedUser.firstName}" เป็น ${newStatus ? 'เปิดใช้งาน' : 'ระงับการใช้งาน'} สำเร็จ`);
       setDialogAction(null);
       fetchUsers();
     } catch (e) {
-      error('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+      error('เกิดข้อผิดพลาดในการเปลี่ยนสถานะ');
     } finally {
       setIsProcessing(false);
     }

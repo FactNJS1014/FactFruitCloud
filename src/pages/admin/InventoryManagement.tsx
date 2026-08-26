@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { api } from '../../services/api';
 import { FruitProduct } from '../../types';
 import { StockBadge } from '../../components/common/StockBadge';
 import {
@@ -36,24 +37,17 @@ export const InventoryManagement: React.FC = () => {
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const fetchInventory = async () => {
-    if (!token) return;
     try {
       setIsLoading(true);
-      const [invRes, lowRes, logsRes] = await Promise.all([
-        fetch('/api/inventory', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/inventory/low-stock', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/inventory/logs', { headers: { Authorization: `Bearer ${token}` } }),
+      const [invData, lowData, logsData] = await Promise.all([
+        api.getInventory(token),
+        api.getLowStock(token),
+        api.getInventoryLogs(token),
       ]);
 
-      const [invJson, lowJson, logsJson] = await Promise.all([
-        invRes.json(),
-        lowRes.json(),
-        logsRes.json(),
-      ]);
-
-      if (invJson.data) setProducts(invJson.data);
-      if (lowJson.data) setLowStock(lowJson.data);
-      if (logsJson.data) setLogs(logsJson.data);
+      if (invData) setProducts(invData);
+      if (lowData) setLowStock(lowData);
+      if (logsData) setLogs(logsData);
     } catch (err) {
       console.error('Error fetching inventory:', err);
     } finally {
@@ -79,30 +73,19 @@ export const InventoryManagement: React.FC = () => {
 
     try {
       setIsSaving(true);
-      const res = await fetch(`/api/inventory/${selectedProduct.id}/adjust`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          type: adjustType,
-          quantity: parseFloat(String(quantity)),
-          note: note.trim() || undefined,
-        }),
-      });
+      const updated = await api.adjustStock(
+        token,
+        selectedProduct.id,
+        adjustType,
+        parseFloat(String(quantity)),
+        note.trim() || undefined
+      );
 
-      const json = await res.json();
-      if (!res.ok) {
-        error(json.error || 'ไม่สามารถปรับสต็อกสินค้าได้');
-        return;
-      }
-
-      success(`ปรับสต็อก "${selectedProduct.name}" สำเร็จ (สต็อกใหม่: ${json.product.stock} ${selectedProduct.unit})`);
+      success(`ปรับสต็อก "${selectedProduct.name}" สำเร็จ (สต็อกใหม่: ${updated?.stock ?? selectedProduct.stock} ${selectedProduct.unit})`);
       setIsModalOpen(false);
       fetchInventory();
     } catch (err) {
-      error('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+      error('เกิดข้อผิดพลาดในการปรับสต็อกสินค้า');
     } finally {
       setIsSaving(false);
     }

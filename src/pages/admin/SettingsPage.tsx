@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { api } from '../../services/api';
 import { Settings, Store, Phone, Mail, MapPin, QrCode, Clock, Save } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {
@@ -23,10 +24,9 @@ export const SettingsPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    fetch('/api/settings')
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.data) setSettings((prev) => ({ ...prev, ...json.data }));
+    api.getSettings()
+      .then((data) => {
+        if (data) setSettings((prev) => ({ ...prev, ...data }));
       })
       .catch((e) => console.error(e))
       .finally(() => setIsLoading(false));
@@ -34,28 +34,13 @@ export const SettingsPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
 
     try {
       setIsSaving(true);
-      const res = await fetch('/api/settings', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(settings),
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        error(json.error || 'ไม่สามารถบันทึกการตั้งค่าได้');
-        return;
-      }
-
+      await api.updateSettings(token, settings);
       success('บันทึกการตั้งค่าร้านค้าเรียบร้อยแล้ว');
     } catch (e) {
-      error('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+      error('เกิดข้อผิดพลาดในการบันทึกการตั้งค่า');
     } finally {
       setIsSaving(false);
     }

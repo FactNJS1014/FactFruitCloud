@@ -4,7 +4,7 @@ import { FruitCard } from '../components/fruits/FruitCard';
 import { FruitDetailModal } from '../components/fruits/FruitDetailModal';
 import { Search, SlidersHorizontal, Sparkles, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
-import { fallbackCategories, fallbackProducts } from '../data/mockData';
+import { api } from '../services/api';
 
 interface FruitCatalogProps {
   onNavigate: (path: string) => void;
@@ -24,75 +24,36 @@ export const FruitCatalog: React.FC<FruitCatalogProps> = ({ onNavigate }) => {
 
   // Fetch Categories
   useEffect(() => {
-    fetch('/api/categories')
-      .then((res) => {
-        const contentType = res.headers.get('content-type');
-        if (res.ok && contentType && contentType.includes('application/json')) {
-          return res.json();
-        }
-        throw new Error('Not JSON');
-      })
-      .then((data) => {
-        if (data.data && data.data.length > 0) {
-          setCategories(data.data);
-        } else {
-          setCategories(fallbackCategories);
-        }
-      })
-      .catch(() => {
-        setCategories(fallbackCategories);
-      });
+    api.getCategories().then((cats) => {
+      if (cats && cats.length > 0) {
+        setCategories(cats);
+      }
+    });
   }, []);
 
   // Fetch Products
   const fetchProducts = async () => {
     try {
       setIsLoading(true);
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: '12',
-        sort: sortBy,
+      const data = await api.getProducts({
+        categoryId: selectedCategory,
+        search: searchQuery.trim(),
       });
 
-      if (selectedCategory !== 'all') {
-        params.append('categoryId', selectedCategory);
-      }
-      if (searchQuery.trim()) {
-        params.append('search', searchQuery.trim());
-      }
-
-      const res = await fetch(`/api/products?${params.toString()}`);
-      const contentType = res.headers.get('content-type');
-      if (res.ok && contentType && contentType.includes('application/json')) {
-        const json = await res.json();
-        if (json.data) {
-          setProducts(json.data);
-          setTotalPages(json.totalPages || 1);
-          setTotalItems(json.total || 0);
-          return;
-        }
+      let sorted = [...(data || [])];
+      if (sortBy === 'price-asc') {
+        sorted.sort((a, b) => a.price - b.price);
+      } else if (sortBy === 'price-desc') {
+        sorted.sort((a, b) => b.price - a.price);
+      } else if (sortBy === 'name') {
+        sorted.sort((a, b) => a.name.localeCompare(b.name, 'th'));
       }
 
-      // Fallback for static hosting
-      let filtered = [...fallbackProducts];
-      if (selectedCategory !== 'all') {
-        filtered = filtered.filter((p) => p.categoryId === selectedCategory);
-      }
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        filtered = filtered.filter((p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
-      }
-      setProducts(filtered);
+      setProducts(sorted);
       setTotalPages(1);
-      setTotalItems(filtered.length);
+      setTotalItems(sorted.length);
     } catch (err) {
-      let filtered = [...fallbackProducts];
-      if (selectedCategory !== 'all') {
-        filtered = filtered.filter((p) => p.categoryId === selectedCategory);
-      }
-      setProducts(filtered);
-      setTotalPages(1);
-      setTotalItems(filtered.length);
+      console.error(err);
     } finally {
       setIsLoading(false);
     }

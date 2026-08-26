@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { Order } from '../types';
 import { OrderStatusBadge } from '../components/common/OrderStatusBadge';
 import {
@@ -24,17 +25,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (token) {
-      fetch('/api/orders?limit=5', {
-        headers: { Authorization: `Bearer ${token}` },
+    api.getOrders(token)
+      .then((data) => {
+        if (data) setOrders(data);
       })
-        .then((res) => res.json())
-        .then((json) => {
-          if (json.data) setOrders(json.data);
-        })
-        .catch((err) => console.error('Error fetching user orders', err))
-        .finally(() => setIsLoading(false));
-    }
+      .catch((err) => console.error('Error fetching user orders', err))
+      .finally(() => setIsLoading(false));
   }, [token]);
 
   const totalCount = orders.length;

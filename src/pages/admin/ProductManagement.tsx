@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { api } from '../../services/api';
 import { FruitProduct, FruitCategory } from '../../types';
 import { StockBadge } from '../../components/common/StockBadge';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
@@ -53,23 +54,19 @@ export const ProductManagement: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('/api/categories');
-      const json = await res.json();
-      if (json.data) setCategories(json.data);
+      const data = await api.getCategories();
+      if (data) setCategories(data);
     } catch (e) {}
   };
 
   const fetchProducts = async () => {
-    if (!token) return;
     try {
       setIsLoading(true);
-      const params = new URLSearchParams({ limit: '100' });
-      if (selectedCat !== 'all') params.append('categoryId', selectedCat);
-      if (search.trim()) params.append('search', search.trim());
-
-      const res = await fetch(`/api/products?${params.toString()}`);
-      const json = await res.json();
-      if (json.data) setProducts(json.data);
+      const data = await api.getProducts({
+        categoryId: selectedCat,
+        search: search.trim(),
+      });
+      if (data) setProducts(data);
     } catch (err) {
       console.error('Error fetching products', err);
     } finally {
@@ -133,49 +130,28 @@ export const ProductManagement: React.FC = () => {
 
     try {
       setIsSaving(true);
-      const url = editingProduct ? `/api/products/${editingProduct.id}` : '/api/products';
-      const method = editingProduct ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        error(json.error || 'เกิดข้อผิดพลาดในการบันทึกสินค้า');
-        return;
+      if (editingProduct) {
+        await api.updateProduct(token, editingProduct.id, formData);
+        success('อัปเดตข้อมูลสินค้าเรียบร้อยแล้ว');
+      } else {
+        await api.createProduct(token, formData);
+        success('เพิ่มสินค้าผลไม้ใหม่เรียบร้อยแล้ว');
       }
 
-      success(editingProduct ? 'อัปเดตข้อมูลสินค้าเรียบร้อยแล้ว' : 'เพิ่มสินค้าผลไม้ใหม่เรียบร้อยแล้ว');
       setIsModalOpen(false);
       fetchProducts();
     } catch (err) {
-      error('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+      error('เกิดข้อผิดพลาดในการบันทึกสินค้า');
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!deletingProduct || !token) return;
+    if (!deletingProduct) return;
     try {
       setIsSaving(true);
-      const res = await fetch(`/api/products/${deletingProduct.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        error(json.error || 'ไม่สามารถลบสินค้าได้');
-        return;
-      }
-
+      await api.deleteProduct(token, deletingProduct.id);
       success(`ลบสินค้า "${deletingProduct.name}" เรียบร้อยแล้ว`);
       setIsDeleteOpen(false);
       fetchProducts();
@@ -188,18 +164,9 @@ export const ProductManagement: React.FC = () => {
 
   const handleToggleAvailable = async (prod: FruitProduct) => {
     try {
-      const res = await fetch(`/api/products/${prod.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ isAvailable: !prod.isAvailable }),
-      });
-      if (res.ok) {
-        success(`เปลี่ยนสถานะ "${prod.name}" เป็น ${!prod.isAvailable ? 'พร้อมจำหน่าย' : 'ปิดจำหน่าย'}`);
-        fetchProducts();
-      }
+      await api.updateProduct(token, prod.id, { isAvailable: !prod.isAvailable });
+      success(`เปลี่ยนสถานะ "${prod.name}" เป็น ${!prod.isAvailable ? 'พร้อมจำหน่าย' : 'ปิดจำหน่าย'}`);
+      fetchProducts();
     } catch (e) {
       error('เกิดข้อผิดพลาดในการอัปเดตสถานะ');
     }

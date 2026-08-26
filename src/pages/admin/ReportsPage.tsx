@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { api } from '../../services/api';
 import {
   BarChart3,
   Calendar,
@@ -33,14 +34,10 @@ export const ReportsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const fetchReports = async () => {
-    if (!token) return;
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/reports/sales?period=${period}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const json = await res.json();
-      if (json.data) setReport(json.data);
+      const data = await api.getSalesReport(token, period);
+      if (data) setReport(data);
     } catch (e) {
       console.error(e);
     } finally {
