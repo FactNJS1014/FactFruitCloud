@@ -176,13 +176,13 @@ export const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ orderId, onNav
                         {item.productName}
                       </h4>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        ราคา: ฿{item.price.toLocaleString()} / {item.unit}
+                        ราคา: ฿{(item.unitPrice ?? (item as any).price ?? item.product?.price ?? 0).toLocaleString()} / {item.unit || 'กก.'}
                       </p>
                     </div>
 
                     <div className="text-right">
                       <span className="font-extrabold text-sm text-emerald-600 dark:text-emerald-400">
-                        ฿{item.subtotal.toLocaleString()}
+                        ฿{(item.subtotal ?? (item.unitPrice || (item as any).price || 0) * item.quantity).toLocaleString()}
                       </span>
                     </div>
                   </div>

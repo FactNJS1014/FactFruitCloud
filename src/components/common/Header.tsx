@@ -308,6 +308,22 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
 
                     <button
+                      onClick={() => handleNav('/dashboard')}
+                      className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors"
+                    >
+                      <Package className="w-4 h-4 text-slate-400" />
+                      <span>แดชบอร์ดสมาชิก</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleNav('/my-orders')}
+                      className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors"
+                    >
+                      <ShoppingBag className="w-4 h-4 text-slate-400" />
+                      <span>รายการสั่งซื้อของฉัน</span>
+                    </button>
+
+                    <button
                       onClick={() => handleNav('/profile')}
                       className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors"
                     >
@@ -315,21 +331,13 @@ export const Header: React.FC<HeaderProps> = ({
                       <span>ข้อมูลโปรไฟล์</span>
                     </button>
 
-                    {isAdmin ? (
+                    {isAdmin && (
                       <button
                         onClick={() => handleNav('/admin/dashboard')}
                         className="w-full px-3 py-2 rounded-xl text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 flex items-center gap-2.5 transition-colors"
                       >
                         <Shield className="w-4 h-4 text-emerald-500" />
                         <span>จัดการระบบ (Admin)</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleNav('/dashboard')}
-                        className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors"
-                      >
-                        <Package className="w-4 h-4 text-slate-400" />
-                        <span>แดชบอร์ดของฉัน</span>
                       </button>
                     )}
 

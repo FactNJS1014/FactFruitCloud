@@ -207,11 +207,11 @@ export const MyOrders: React.FC<MyOrdersProps> = ({ onNavigate }) => {
                         {item.productName}
                       </p>
                       <p className="text-[11px] text-slate-400">
-                        {item.quantity} {item.unit} × ฿{item.price.toLocaleString()}
+                        {item.quantity} {item.unit || 'กก.'} × ฿{(item.unitPrice ?? (item as any).price ?? item.product?.price ?? 0).toLocaleString()}
                       </p>
                     </div>
                     <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300">
-                      ฿{item.subtotal.toLocaleString()}
+                      ฿{(item.subtotal ?? (item.unitPrice || (item as any).price || 0) * item.quantity).toLocaleString()}
                     </span>
                   </div>
                 ))}

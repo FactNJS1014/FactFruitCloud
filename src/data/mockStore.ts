@@ -302,7 +302,35 @@ export const mockStore = {
 
   // Orders
   getOrders(): Order[] {
-    return getStore(STORAGE_KEYS.ORDERS, initialOrders);
+    const raw = getStore<Order[]>(STORAGE_KEYS.ORDERS, initialOrders);
+    if (!Array.isArray(raw) || raw.length === 0) {
+      return initialOrders;
+    }
+    return raw.map((order) => {
+      const items = (order.items || []).map((item: any, idx) => {
+        const uPrice = item.unitPrice ?? item.price ?? item.product?.price ?? 100;
+        const qty = item.quantity || 1;
+        return {
+          id: item.id || `item-${idx}`,
+          orderId: item.orderId || order.id,
+          productId: item.productId || 'prod-1',
+          productName: item.productName || item.product?.name || 'ผลไม้พรีเมียม',
+          product: item.product,
+          unitPrice: uPrice,
+          quantity: qty,
+          unit: item.unit || item.product?.unit || 'กก.',
+          subtotal: item.subtotal ?? (uPrice * qty),
+        };
+      });
+      const total = order.total ?? items.reduce((s, it) => s + it.subtotal, 0);
+      return {
+        ...order,
+        subtotal: order.subtotal ?? total,
+        discount: order.discount ?? 0,
+        total,
+        items,
+      };
+    });
   },
   saveOrders(orders: Order[]) {
     setStore(STORAGE_KEYS.ORDERS, orders);
