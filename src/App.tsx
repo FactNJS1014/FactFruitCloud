@@ -40,7 +40,7 @@ function AppContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [successOrderInfo, setSuccessOrderInfo] = useState<{ id: string; orderNumber: string; total: number } | null>(null);
 
-  // Synchronize browser history
+  // Synchronize browser history & enforce /login for unauthenticated users
   useEffect(() => {
     const handlePopState = () => {
       setCurrentPath(window.location.pathname || '/');
@@ -48,6 +48,13 @@ function AppContent() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && currentPath !== '/login' && currentPath !== '/register') {
+      window.history.replaceState({}, '', '/login');
+      setCurrentPath('/login');
+    }
+  }, [isLoading, isAuthenticated, currentPath]);
 
   const navigate = (path: string) => {
     if (path !== currentPath) {
@@ -73,17 +80,22 @@ function AppContent() {
       );
     }
 
-    // Public / Catalog
-    if (currentPath === '/' || currentPath === '/fruits') {
-      return <FruitCatalog onNavigate={navigate} />;
+    // Authentication views when explicitly requested
+    if (currentPath === '/register') {
+      return <Register onNavigate={navigate} />;
     }
-
-    // Authentication
     if (currentPath === '/login') {
       return <Login onNavigate={navigate} />;
     }
-    if (currentPath === '/register') {
-      return <Register onNavigate={navigate} />;
+
+    // Force Login / Register if user is not authenticated
+    if (!isAuthenticated) {
+      return <Login onNavigate={navigate} />;
+    }
+
+    // Public / Catalog (Accessible when logged in)
+    if (currentPath === '/' || currentPath === '/fruits') {
+      return <FruitCatalog onNavigate={navigate} />;
     }
 
     // Order Success

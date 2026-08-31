@@ -346,6 +346,7 @@ export const Header: React.FC<HeaderProps> = ({
                         onClick={() => {
                           logout();
                           setIsUserMenuOpen(false);
+                          handleNav('/login');
                         }}
                         className="w-full px-3 py-2 rounded-xl text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2.5 transition-colors"
                       >
